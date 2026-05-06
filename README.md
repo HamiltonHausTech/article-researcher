@@ -1,8 +1,8 @@
 # Personal Article Digest
 
-Small local article digest generator. It rotates through configured topics, finds recent article candidates using OpenAI web search, summarizes them with local Ollama, and publishes a simple HTML page suitable for serving from nginx.
+Small local article digest generator. It rotates through configured topics, finds recent article candidates using OpenAI web search, analyzes them with local Ollama, and publishes a decision-oriented HTML page suitable for serving from nginx.
 
-This is currently a lightweight prototype. The next planned improvement is to replace generic summaries with skeptical article triage: read/skim/ignore recommendations, signal/fluff scores, claims to verify, and why an article may matter.
+This is currently a lightweight prototype. The summarizer now performs skeptical article triage: read/skim/watch/ignore recommendations, signal/fluff scores, claims to verify, and why an article may matter.
 
 ## Fresh setup
 
@@ -20,11 +20,19 @@ Create `.env` with your OpenAI key, or export it in the shell/service environmen
 OPENAI_API_KEY=...
 ```
 
-Install and run Ollama on the host, then pull the configured model:
+Install and run Ollama on the host, then pull the configured model. The current default is `qwen2.5:7b-instruct`, which is a stronger local default than the older `mistral` model for structured technical triage:
 
 ```bash
-ollama pull mistral
+ollama pull qwen2.5:7b-instruct
 ```
+
+Other local options to consider:
+
+- `qwen2.5:7b-instruct`: good default balance of quality, speed, and JSON-following.
+- `llama3.2:3b`: faster/lighter, but weaker for nuanced hype detection.
+- `gpt-oss:latest`: available locally on this machine and potentially stronger, but slower and more verbose/reasoning-heavy in quick tests.
+
+Set `ARTICLES_OLLAMA_MODEL` if you want to try a different model without editing source.
 
 ## Configuration
 
@@ -41,8 +49,8 @@ All paths are configurable by environment variable so the same checkout can run 
 | `ARTICLES_NGINX_DIR` | `~/Projects/docker/nginx/html` | HTML publish directory |
 | `ARTICLES_OPENAI_MODEL` | `gpt-4.1` | OpenAI model used for article discovery |
 | `ARTICLES_FETCH_COUNT` | `4` | Number of candidate articles to request |
-| `ARTICLES_OLLAMA_BIN` | `/usr/local/bin/ollama` | Ollama executable path |
-| `ARTICLES_OLLAMA_MODEL` | `mistral` | Ollama model used for summary |
+| `ARTICLES_OLLAMA_HOST` | `http://127.0.0.1:11434` | Ollama API endpoint |
+| `ARTICLES_OLLAMA_MODEL` | `qwen2.5:7b-instruct` | Ollama model used for article triage |
 
 ## Run
 
@@ -75,7 +83,7 @@ Type=oneshot
 WorkingDirectory=/home/andrew/Projects/hamiltonhaus/articles
 Environment=ARTICLES_DATA_DIR=/home/andrew/ai-digests
 Environment=ARTICLES_NGINX_DIR=/home/andrew/Projects/docker/nginx/html
-Environment=ARTICLES_OLLAMA_BIN=/usr/local/bin/ollama
+Environment=ARTICLES_OLLAMA_HOST=http://127.0.0.1:11434
 EnvironmentFile=-/home/andrew/Projects/hamiltonhaus/articles/.env
 ExecStart=/home/andrew/Projects/hamiltonhaus/articles/.venv/bin/python /home/andrew/Projects/hamiltonhaus/articles/daily_digest.py
 ```
@@ -105,7 +113,7 @@ systemctl list-timers article-digest.timer
 ## Current limitations
 
 - `fetch_sources.py` currently relies on OpenAI web search returning article summaries/snippets; it does not yet fetch and analyze full article text.
-- `summarize.py` still produces generic bullet summaries; the next improvement should add an article-judging JSON schema and richer HTML rendering.
+- `summarize.py` now produces structured skeptical triage from the available content/excerpt. Full article extraction is still a future improvement.
 - There is no dedupe/archive database yet.
 
 ## Quick validation
