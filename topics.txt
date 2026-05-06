@@ -1,0 +1,14 @@
+AI Systems Design
+LLM Benchmarks and Evaluation
+Offline AI and Edge LLM's
+Prompt Engineering
+AI and Devops
+Self-hosted tools
+Infrastructure as code
+Observability with AI
+CI/CD trends
+Container Hardening
+agent frameworks for devops
+AI for terraform
+business of AI
+integrating ai into daily activities

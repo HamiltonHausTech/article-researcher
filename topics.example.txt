@@ -1,0 +1,8 @@
+AI and DevOps
+AWS platform engineering
+Kubernetes operations
+Terraform infrastructure automation
+LLM agents for software engineering
+open data infrastructure
+local AI tooling
+security for AI systems
