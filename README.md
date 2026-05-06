@@ -57,7 +57,9 @@ All paths are configurable by environment variable so the same checkout can run 
 | `ARTICLES_FETCH_COUNT` | `4` | Number of candidate articles to request |
 | `ARTICLES_OLLAMA_HOST` | `http://127.0.0.1:11434` | Ollama API endpoint |
 | `ARTICLES_OLLAMA_MODEL` | `qwen2.5:7b-instruct` | Ollama model used for article triage |
+| `ARTICLES_OLLAMA_TIMEOUT` | `300` | Seconds to allow each local-model analysis request |
 | `ARTICLES_EXTRACT_TIMEOUT` | `20` | Seconds to spend fetching each article URL |
+| `ARTICLES_MAX_ANALYSIS_CHARS` | `18000` | Max extracted article characters sent to the local model |
 
 ## Run
 
@@ -115,10 +117,12 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+TimeoutStartSec=30min
 WorkingDirectory=/home/andrew/Projects/hamiltonhaus/articles
 Environment=ARTICLES_DATA_DIR=/home/andrew/ai-digests
 Environment=ARTICLES_NGINX_DIR=/home/andrew/Projects/docker/nginx/html
 Environment=ARTICLES_OLLAMA_HOST=http://127.0.0.1:11434
+Environment=ARTICLES_OLLAMA_TIMEOUT=300
 EnvironmentFile=-/home/andrew/Projects/hamiltonhaus/articles/.env
 ExecStart=/home/andrew/Projects/hamiltonhaus/articles/.venv/bin/python /home/andrew/Projects/hamiltonhaus/articles/daily_digest.py
 ```

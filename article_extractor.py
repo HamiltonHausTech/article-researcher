@@ -9,6 +9,7 @@ fails, callers can fall back to the search-generated excerpt in sources.json.
 """
 
 import html
+import os
 import re
 import urllib.error
 import urllib.request
@@ -24,7 +25,7 @@ USER_AGENT = (
 )
 MAX_DOWNLOAD_BYTES = 2_000_000
 MIN_EXTRACTED_CHARS = 700
-MAX_ANALYSIS_CHARS = 18_000
+MAX_ANALYSIS_CHARS = int(os.environ.get("ARTICLES_MAX_ANALYSIS_CHARS", "18000"))
 
 
 @dataclass
