@@ -1,6 +1,6 @@
 # Personal Article Digest
 
-Small local article digest generator. It rotates through configured topics, finds recent article candidates using OpenAI web search, analyzes them with local Ollama, and publishes a decision-oriented HTML page suitable for serving from nginx.
+Small local article digest generator. It rotates through configured topics, finds recent article candidates from curated feeds or OpenAI web search, analyzes them with local Ollama, and publishes a decision-oriented HTML page suitable for serving from nginx.
 
 This is currently a lightweight prototype. The summarizer now performs skeptical article triage: read/skim/watch/ignore recommendations, signal/fluff scores, claims to verify, and why an article may matter.
 
@@ -45,6 +45,12 @@ All paths are configurable by environment variable so the same checkout can run 
 | `ARTICLES_RECENT_FILE` | `$ARTICLES_DATA_DIR/recent.json` | Recently used topic history |
 | `ARTICLES_RECENT_LIMIT` | `5` | Avoid repeating topics from last N runs |
 | `ARTICLES_SOURCES_FILE` | `./sources.json` | Candidate article JSON between stages |
+| `ARTICLES_DISCOVERY_MODE` | `feeds` | Daily discovery mode: `feeds` or `search` |
+| `ARTICLES_FEEDS_FILE` | `./source_feeds.json` | Curated RSS/Atom source list |
+| `ARTICLES_SEEN_FILE` | `$ARTICLES_DATA_DIR/seen_urls.json` | URL archive used to suppress repeats |
+| `ARTICLES_FEED_LIMIT` | `$ARTICLES_FETCH_COUNT` or `6` | Number of feed candidates to keep |
+| `ARTICLES_FEED_DAYS` | `14` | Feed item recency window |
+| `ARTICLES_MAX_PER_FEED` | `2` | Per-source cap before backfilling, to avoid one feed dominating |
 | `ARTICLES_DIGEST_DIR` | `$ARTICLES_DATA_DIR/daily` | Markdown digest output directory |
 | `ARTICLES_NGINX_DIR` | `~/Projects/docker/nginx/html` | HTML publish directory |
 | `ARTICLES_OPENAI_MODEL` | `gpt-4.1` | OpenAI model used for article discovery |
@@ -63,6 +69,15 @@ python daily_digest.py
 Or run the two stages manually:
 
 ```bash
+python feed_fetch.py "AI and DevOps"
+python summarize.py
+```
+
+Use OpenAI web search discovery instead of curated feeds:
+
+```bash
+ARTICLES_DISCOVERY_MODE=search python daily_digest.py
+# or manually:
 python fetch_sources.py "AI and DevOps"
 python summarize.py
 ```
@@ -78,6 +93,13 @@ Manual URL analysis writes a markdown digest and JSON analysis under `$ARTICLES_
 ```bash
 python analyze_url.py --topic "data infrastructure" --publish "https://www.fivetran.com/blog/what-is-open-data-infrastructure"
 ```
+
+Output behavior:
+
+- Markdown archives are written under `$ARTICLES_DIGEST_DIR` / `$ARTICLES_DATA_DIR/daily`.
+- Structured JSON analysis is written under `$ARTICLES_ANALYSIS_DIR` / `$ARTICLES_DATA_DIR/analysis`.
+- The daily digest writes real `.html` files into `$ARTICLES_NGINX_DIR` and updates `$ARTICLES_NGINX_DIR/index.html` to point at the latest daily HTML file.
+- Manual `analyze_url.py --publish` writes an HTML file into `$ARTICLES_NGINX_DIR`, but does not replace `index.html`.
 
 ## Lab box systemd example
 
@@ -125,9 +147,9 @@ systemctl list-timers article-digest.timer
 
 ## Current limitations
 
-- `fetch_sources.py` currently relies on OpenAI web search for discovery, but `summarize.py` now fetches each discovered URL and analyzes extracted article text when possible.
+- `feed_fetch.py` is the default deterministic discovery path. `fetch_sources.py` remains available as OpenAI web search fallback/exploration.
 - Article extraction is best-effort static HTML extraction. Sites that block bots, require JavaScript, or serve paywalls fall back to the search excerpt.
-- There is no dedupe/archive database yet.
+- Feed discovery dedupes normalized URLs and tracks selected URLs in `$ARTICLES_SEEN_FILE`, but there is not yet a full feedback database for post-analysis ratings.
 
 ## Quick validation
 

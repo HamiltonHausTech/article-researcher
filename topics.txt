@@ -1,14 +1,8 @@
-AI Systems Design
-LLM Benchmarks and Evaluation
-Offline AI and Edge LLM's
-Prompt Engineering
-AI and Devops
-Self-hosted tools
-Infrastructure as code
-Observability with AI
-CI/CD trends
-Container Hardening
-agent frameworks for devops
-AI for terraform
-business of AI
-integrating ai into daily activities
+AI agents for software engineering
+Kubernetes operations
+AWS platform engineering
+Terraform and infrastructure automation
+local AI tooling
+data infrastructure and lakehouse architecture
+security for AI systems
+observability and incident response

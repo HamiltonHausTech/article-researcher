@@ -375,15 +375,16 @@ def publish_digest(topic: str, digest: str) -> None:
 
     if latest_digest:
         NGINX_DIR.mkdir(parents=True, exist_ok=True)
-        digest_basename = OUTPUT_FILE.name
-        nginx_digest_path = NGINX_DIR / digest_basename
+        html_basename = OUTPUT_FILE.with_suffix(".html").name
+        nginx_digest_path = NGINX_DIR / html_basename
         nginx_digest_path.write_text(wrap_html(topic, digest))
 
         index_path = NGINX_DIR / "index.html"
         if index_path.exists() or index_path.is_symlink():
             index_path.unlink()
-        index_path.symlink_to(digest_basename)
-        print(f"🔗 index.html → {digest_basename}")
+        index_path.symlink_to(html_basename)
+        print(f"🌐 HTML written to {nginx_digest_path}")
+        print(f"🔗 index.html → {html_basename}")
 
 
 def main() -> None:

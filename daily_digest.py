@@ -17,6 +17,7 @@ DATA_DIR = Path(os.environ.get("ARTICLES_DATA_DIR", "~/ai-digests")).expanduser(
 TOPIC_FILE = Path(os.environ.get("ARTICLES_TOPIC_FILE", DATA_DIR / "topics.txt")).expanduser()
 RECENT_FILE = Path(os.environ.get("ARTICLES_RECENT_FILE", DATA_DIR / "recent.json")).expanduser()
 RECENT_LIMIT = int(os.environ.get("ARTICLES_RECENT_LIMIT", "5"))
+DISCOVERY_MODE = os.environ.get("ARTICLES_DISCOVERY_MODE", "feeds").strip().lower()
 
 
 def load_topics():
@@ -54,7 +55,14 @@ def pick_topic(topics, recent):
 
 def run_fetch_and_summarize(topic):
     print(f"🔍 Selected topic: {topic}")
-    subprocess.run([sys.executable, str(SCRIPT_DIR / "fetch_sources.py"), topic], check=True, cwd=SCRIPT_DIR)
+    if DISCOVERY_MODE == "search":
+        fetch_script = "fetch_sources.py"
+    elif DISCOVERY_MODE == "feeds":
+        fetch_script = "feed_fetch.py"
+    else:
+        raise SystemExit("ARTICLES_DISCOVERY_MODE must be 'feeds' or 'search'")
+    print(f"📰 Discovery mode: {DISCOVERY_MODE}")
+    subprocess.run([sys.executable, str(SCRIPT_DIR / fetch_script), topic], check=True, cwd=SCRIPT_DIR)
     subprocess.run([sys.executable, str(SCRIPT_DIR / "summarize.py")], check=True, cwd=SCRIPT_DIR)
 
 

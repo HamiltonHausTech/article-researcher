@@ -1,0 +1,70 @@
+{
+  "feeds": [
+    {
+      "name": "The New Stack",
+      "url": "https://thenewstack.io/feed/",
+      "tags": ["devops", "cloud", "infrastructure"],
+      "weight": 0.8
+    },
+    {
+      "name": "AWS News Blog",
+      "url": "https://aws.amazon.com/blogs/aws/feed/",
+      "tags": ["aws", "cloud"],
+      "weight": 0.9
+    },
+    {
+      "name": "AWS Architecture Blog",
+      "url": "https://aws.amazon.com/blogs/architecture/feed/",
+      "tags": ["aws", "architecture"],
+      "weight": 0.9
+    },
+    {
+      "name": "Kubernetes Blog",
+      "url": "https://kubernetes.io/feed.xml",
+      "tags": ["kubernetes", "platform"],
+      "weight": 0.9
+    },
+    {
+      "name": "CNCF Blog",
+      "url": "https://www.cncf.io/feed/",
+      "tags": ["cloud-native", "kubernetes"],
+      "weight": 0.8
+    },
+    {
+      "name": "Cloudflare Blog",
+      "url": "https://blog.cloudflare.com/rss/",
+      "tags": ["networking", "security", "edge"],
+      "weight": 0.8
+    },
+    {
+      "name": "GitHub Engineering",
+      "url": "https://github.blog/engineering/feed/",
+      "tags": ["software-engineering", "developer-tools"],
+      "weight": 0.8
+    },
+    {
+      "name": "Tailscale Blog",
+      "url": "https://tailscale.com/blog/index.xml",
+      "tags": ["networking", "security", "infrastructure"],
+      "weight": 0.8
+    },
+    {
+      "name": "Simon Willison",
+      "url": "https://simonwillison.net/atom/everything/",
+      "tags": ["ai", "llm", "software"],
+      "weight": 0.9
+    },
+    {
+      "name": "OpenAI Blog",
+      "url": "https://openai.com/news/rss.xml",
+      "tags": ["ai", "llm"],
+      "weight": 0.7
+    },
+    {
+      "name": "Anthropic News",
+      "url": "https://www.anthropic.com/news/rss.xml",
+      "tags": ["ai", "llm"],
+      "weight": 0.7
+    }
+  ]
+}
