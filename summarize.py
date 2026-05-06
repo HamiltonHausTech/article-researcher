@@ -213,6 +213,9 @@ def load_sources() -> dict[str, Any]:
 
 def analyze_article(topic: str, article: dict[str, Any]) -> dict[str, Any]:
     extracted = extract_article(str(article.get("url", "")), timeout=EXTRACT_TIMEOUT)
+    article_title = str(article.get("title") or "Untitled")
+    if extracted.title and (article_title == "Untitled" or article_title == str(article.get("url", ""))):
+        article_title = extracted.title
     source_excerpt = str(article.get("content", ""))
     if extracted.ok:
         analysis_content = extracted.text
@@ -232,7 +235,7 @@ def analyze_article(topic: str, article: dict[str, Any]) -> dict[str, Any]:
     prompt = (
         ANALYSIS_PROMPT
         .replace("{topic}", str(topic))
-        .replace("{title}", str(article.get("title", "Untitled")))
+        .replace("{title}", article_title)
         .replace("{url}", str(article.get("url", "")))
         .replace("{metadata}", json.dumps(metadata, indent=2))
         .replace("{content_source}", content_source)
@@ -240,7 +243,7 @@ def analyze_article(topic: str, article: dict[str, Any]) -> dict[str, Any]:
         .replace("{content}", analysis_content)
     )
     analysis = analyze_with_ollama(prompt)
-    return {**article, "extraction": extracted.to_dict(), "content_source": content_source, "analysis": analysis}
+    return {**article, "title": article_title, "extraction": extracted.to_dict(), "content_source": content_source, "analysis": analysis}
 
 
 def recommendation_rank(item: dict[str, Any]) -> tuple[int, int, int]:

@@ -67,6 +67,18 @@ python fetch_sources.py "AI and DevOps"
 python summarize.py
 ```
 
+Analyze a manually supplied article URL without running the daily topic rotation:
+
+```bash
+python analyze_url.py "https://www.fivetran.com/blog/what-is-open-data-infrastructure"
+```
+
+Manual URL analysis writes a markdown digest and JSON analysis under `$ARTICLES_DATA_DIR`. Add `--publish` to also write an HTML copy into `$ARTICLES_NGINX_DIR` without replacing the daily `index.html`:
+
+```bash
+python analyze_url.py --topic "data infrastructure" --publish "https://www.fivetran.com/blog/what-is-open-data-infrastructure"
+```
+
 ## Lab box systemd example
 
 Adjust paths for the lab box checkout and nginx directory.
