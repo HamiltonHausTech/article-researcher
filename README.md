@@ -51,6 +51,7 @@ All paths are configurable by environment variable so the same checkout can run 
 | `ARTICLES_FETCH_COUNT` | `4` | Number of candidate articles to request |
 | `ARTICLES_OLLAMA_HOST` | `http://127.0.0.1:11434` | Ollama API endpoint |
 | `ARTICLES_OLLAMA_MODEL` | `qwen2.5:7b-instruct` | Ollama model used for article triage |
+| `ARTICLES_EXTRACT_TIMEOUT` | `20` | Seconds to spend fetching each article URL |
 
 ## Run
 
@@ -112,8 +113,8 @@ systemctl list-timers article-digest.timer
 
 ## Current limitations
 
-- `fetch_sources.py` currently relies on OpenAI web search returning article summaries/snippets; it does not yet fetch and analyze full article text.
-- `summarize.py` now produces structured skeptical triage from the available content/excerpt. Full article extraction is still a future improvement.
+- `fetch_sources.py` currently relies on OpenAI web search for discovery, but `summarize.py` now fetches each discovered URL and analyzes extracted article text when possible.
+- Article extraction is best-effort static HTML extraction. Sites that block bots, require JavaScript, or serve paywalls fall back to the search excerpt.
 - There is no dedupe/archive database yet.
 
 ## Quick validation

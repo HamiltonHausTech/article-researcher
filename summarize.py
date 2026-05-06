@@ -20,11 +20,14 @@ from typing import Any
 
 import markdown2
 
+from article_extractor import extract_article
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("ARTICLES_DATA_DIR", "~/ai-digests")).expanduser()
 OLLAMA_MODEL = os.environ.get("ARTICLES_OLLAMA_MODEL", "qwen2.5:7b-instruct")
 OLLAMA_HOST = os.environ.get("ARTICLES_OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
 OLLAMA_TIMEOUT = int(os.environ.get("ARTICLES_OLLAMA_TIMEOUT", "180"))
+EXTRACT_TIMEOUT = int(os.environ.get("ARTICLES_EXTRACT_TIMEOUT", "20"))
 INPUT_FILE = Path(os.environ.get("ARTICLES_SOURCES_FILE", SCRIPT_DIR / "sources.json")).expanduser()
 DIGEST_DIR = Path(os.environ.get("ARTICLES_DIGEST_DIR", DATA_DIR / "daily")).expanduser()
 ANALYSIS_DIR = Path(os.environ.get("ARTICLES_ANALYSIS_DIR", DATA_DIR / "analysis")).expanduser()
@@ -42,7 +45,7 @@ The reader has limited time and dislikes vendor fluff, generic trend pieces, SEO
 
 Analyze the article candidate below. Decide whether it is worth the reader's attention. Separate technically meaningful claims from marketing language. Penalize thin vendor announcements and generic trend content. Prefer concrete technical details, independent evidence, operational lessons, architecture, benchmarks, failure modes, and practical implications.
 
-Important limitation: the content may be a search-generated excerpt/summary rather than full article text. If evidence is thin, reflect that in the scores and claims_to_verify.
+Important limitation: the content_source field says whether the text is extracted article text or only a search-generated excerpt/summary. If evidence is thin, reflect that in the scores and claims_to_verify. Be more confident when content_source is extracted_article_text and extraction_status is ok.
 
 Return strict JSON only with exactly these keys:
 {
@@ -71,7 +74,13 @@ Scoring guide:
 Topic: {topic}
 Title: {title}
 URL: {url}
-Content or excerpt:
+Source metadata:
+{metadata}
+
+Content source: {content_source}
+Extraction status: {extraction_status}
+
+Content:
 {content}
 """
 
@@ -203,15 +212,35 @@ def load_sources() -> dict[str, Any]:
 
 
 def analyze_article(topic: str, article: dict[str, Any]) -> dict[str, Any]:
+    extracted = extract_article(str(article.get("url", "")), timeout=EXTRACT_TIMEOUT)
+    source_excerpt = str(article.get("content", ""))
+    if extracted.ok:
+        analysis_content = extracted.text
+        content_source = "extracted_article_text"
+    else:
+        analysis_content = source_excerpt
+        content_source = "search_excerpt_fallback"
+
+    metadata = {
+        "extracted_title": extracted.title,
+        "site_name": extracted.site_name,
+        "byline": extracted.byline,
+        "published_date": extracted.published_date,
+        "extracted_chars": extracted.content_chars,
+        "extraction_error": extracted.error,
+    }
     prompt = (
         ANALYSIS_PROMPT
         .replace("{topic}", str(topic))
         .replace("{title}", str(article.get("title", "Untitled")))
         .replace("{url}", str(article.get("url", "")))
-        .replace("{content}", str(article.get("content", "")))
+        .replace("{metadata}", json.dumps(metadata, indent=2))
+        .replace("{content_source}", content_source)
+        .replace("{extraction_status}", extracted.status)
+        .replace("{content}", analysis_content)
     )
     analysis = analyze_with_ollama(prompt)
-    return {**article, "analysis": analysis}
+    return {**article, "extraction": extracted.to_dict(), "content_source": content_source, "analysis": analysis}
 
 
 def recommendation_rank(item: dict[str, Any]) -> tuple[int, int, int]:
@@ -239,6 +268,7 @@ def render_article_markdown(item: dict[str, Any]) -> list[str]:
         f"**Technical depth:** {a['technical_depth']}/100 | **Novelty:** {a['novelty']}/100 | "
         f"**Relevance:** {a['relevance']}/100  ",
         f"**Tags:** {tags}",
+        f"**Content source:** {item.get('content_source', 'unknown')} | **Extraction:** {item.get('extraction', {}).get('status', 'unknown')}",
         "",
         f"**Why selected:** {a['why_selected'] or 'Not specified.'}",
         "",
