@@ -59,12 +59,6 @@
       "url": "https://openai.com/news/rss.xml",
       "tags": ["ai", "llm"],
       "weight": 0.7
-    },
-    {
-      "name": "Anthropic News",
-      "url": "https://www.anthropic.com/news/rss.xml",
-      "tags": ["ai", "llm"],
-      "weight": 0.7
     }
   ]
 }

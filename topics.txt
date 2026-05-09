@@ -6,3 +6,13 @@ local AI tooling
 data infrastructure and lakehouse architecture
 security for AI systems
 observability and incident response
+AI agent operations and evaluation
+private AI and local inference infrastructure
+internal developer platforms and DevEx
+software supply chain security and SBOMs
+cloud cost optimization and FinOps
+self-hosted homelab infrastructure
+edge networking and zero trust access
+practical automation for small engineering teams
+technical leadership and engineering strategy
+AI coding tools and developer productivity

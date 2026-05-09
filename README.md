@@ -103,51 +103,54 @@ Output behavior:
 - The daily digest writes real `.html` files into `$ARTICLES_NGINX_DIR` and updates `$ARTICLES_NGINX_DIR/index.html` to point at the latest daily HTML file.
 - Manual `analyze_url.py --publish` writes an HTML file into `$ARTICLES_NGINX_DIR`, but does not replace `index.html`.
 
-## Lab box systemd example
+## Lab box systemd timer
 
-Adjust paths for the lab box checkout and nginx directory.
+Prefer a user-level systemd timer for the lab box. The checkout, data directory,
+`.env`, and nginx publish directory all live under the owning user's home
+directory, so running the digest as that same user avoids brittle permissions or
+home-directory traversal problems from a system service user.
 
-`/etc/systemd/system/article-digest.service`:
-
-```ini
-[Unit]
-Description=Personal article digest generator
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-TimeoutStartSec=30min
-WorkingDirectory=/home/andrew/Projects/hamiltonhaus/articles
-Environment=ARTICLES_DATA_DIR=/home/andrew/ai-digests
-Environment=ARTICLES_NGINX_DIR=/home/andrew/Projects/docker/nginx/html
-Environment=ARTICLES_OLLAMA_HOST=http://127.0.0.1:11434
-Environment=ARTICLES_OLLAMA_TIMEOUT=300
-EnvironmentFile=-/home/andrew/Projects/hamiltonhaus/articles/.env
-ExecStart=/home/andrew/Projects/hamiltonhaus/articles/.venv/bin/python /home/andrew/Projects/hamiltonhaus/articles/daily_digest.py
-```
-
-`/etc/systemd/system/article-digest.timer`:
-
-```ini
-[Unit]
-Description=Run personal article digest daily
-
-[Timer]
-OnCalendar=*-*-* 06:30:00
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-```
-
-Enable:
+If an older system-level timer is already installed, disable it first so it
+doesn't keep running the broken unit:
 
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now article-digest.timer
-systemctl list-timers article-digest.timer
+sudo systemctl disable --now article-digest.timer 2>/dev/null || true
 ```
+
+Install the provided user units:
+
+```bash
+cd ~/Projects/hamiltonhaus/articles
+./scripts/install-user-timer.sh
+```
+
+Validate:
+
+```bash
+systemctl --user list-timers article-digest.timer
+systemctl --user start article-digest.service
+journalctl --user -u article-digest.service -n 100 --no-pager
+```
+
+If the timer should run after boot without an active login session, enable user
+lingering once on the lab box:
+
+```bash
+sudo loginctl enable-linger "$USER"
+```
+
+The installed units come from:
+
+- `systemd/article-digest.service`
+- `systemd/article-digest.timer`
+
+They use `%h` systemd specifiers, so the same files work for `/home/andrew`, a
+renamed account, or another lab host without hard-coding the home directory.
+
+If you intentionally install this as a system unit under `/etc/systemd/system`,
+make sure the service runs as a user that can traverse and read every path it
+uses, or move the checkout/runtime files to a service-owned path such as
+`/opt/article-digest` and keep writable data under `/var/lib/article-digest`.
 
 ## Current limitations
 

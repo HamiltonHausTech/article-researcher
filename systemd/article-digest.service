@@ -1,0 +1,13 @@
+[Unit]
+Description=Personal article digest generator
+
+[Service]
+Type=oneshot
+TimeoutStartSec=30min
+WorkingDirectory=%h/Projects/hamiltonhaus/articles
+Environment=ARTICLES_DATA_DIR=%h/ai-digests
+Environment=ARTICLES_NGINX_DIR=%h/Projects/docker/nginx/html
+Environment=ARTICLES_OLLAMA_HOST=http://127.0.0.1:11434
+Environment=ARTICLES_OLLAMA_TIMEOUT=300
+EnvironmentFile=-%h/Projects/hamiltonhaus/articles/.env
+ExecStart=%h/Projects/hamiltonhaus/articles/.venv/bin/python %h/Projects/hamiltonhaus/articles/daily_digest.py

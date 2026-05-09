@@ -119,7 +119,11 @@ def fetch_feed_candidates(topic: str, limit: int, days: int, include_seen: bool 
     for feed in config.get("feeds", []):
         parsed_feed = feedparser.parse(feed["url"])
         if parsed_feed.bozo:
-            print(f"⚠️ Feed parse warning for {feed.get('name', feed['url'])}: {parsed_feed.bozo_exception}")
+            warning = str(parsed_feed.bozo_exception)
+            # Some valid feeds declare a stale charset but parse fine. Keep that
+            # out of the daily noise; real malformed XML/HTTP issues still show.
+            if "declared as us-ascii, but parsed as utf-8" not in warning.lower():
+                print(f"⚠️ Feed parse warning for {feed.get('name', feed['url'])}: {parsed_feed.bozo_exception}")
         for entry in parsed_feed.entries:
             raw_url = getattr(entry, "link", "")
             if not raw_url:
